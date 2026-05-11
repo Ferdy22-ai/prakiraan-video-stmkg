@@ -1,0 +1,8 @@
+Pillow
+pandas
+numpy
+requests
+moviepy
+imageio
+imageio-ffmpeg
+gdown
