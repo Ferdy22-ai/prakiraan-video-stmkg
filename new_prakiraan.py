@@ -240,7 +240,60 @@ def paste_ikon_cuaca(base_img, ikon_dir, position, ikon_filename):
 # DATA POSISI
 # =====================================================================
 # Gunakan blok data koordinat lengkap dari skrip Anda sebelumnya.
-data = []
+data = [
+
+    # HEADER
+    {"x": 581.7, "y": 197.0, "cell": (0, "Tanggal")},
+    {"x": 722.7, "y": 197.0, "cell": (0, "Jam")},
+
+    {"x": 1160.4, "y": 197.0, "cell": (8, "Tanggal")},
+    {"x": 1300.7, "y": 197.0, "cell": (8, "Jam")},
+
+    # SUHU
+    {"x": 320.2, "y": 373.3, "cell": (0, "Suhu")},
+    {"x": 710.9, "y": 373.3, "cell": (1, "Suhu")},
+    {"x": 1100.6, "y": 373.3, "cell": (2, "Suhu")},
+    {"x": 1491.3, "y": 373.3, "cell": (3, "Suhu")},
+
+    {"x": 320.2, "y": 710.9, "cell": (4, "Suhu")},
+    {"x": 710.9, "y": 710.9, "cell": (5, "Suhu")},
+    {"x": 1100.6, "y": 710.9, "cell": (6, "Suhu")},
+    {"x": 1491.3, "y": 710.9, "cell": (7, "Suhu")},
+
+    # KELEMBAPAN
+    {"x": 393.9, "y": 373.3, "cell": (0, "Kelembapan")},
+    {"x": 784.6, "y": 373.3, "cell": (1, "Kelembapan")},
+    {"x": 1175.3, "y": 373.3, "cell": (2, "Kelembapan")},
+    {"x": 1566.0, "y": 373.3, "cell": (3, "Kelembapan")},
+
+    {"x": 393.9, "y": 710.9, "cell": (4, "Kelembapan")},
+    {"x": 784.6, "y": 710.9, "cell": (5, "Kelembapan")},
+    {"x": 1175.3, "y": 710.9, "cell": (6, "Kelembapan")},
+    {"x": 1566.0, "y": 710.9, "cell": (7, "Kelembapan")},
+
+    # KECEPATAN ANGIN
+    {"x": 381.4, "y": 513.7, "cell": (0, "Kecepatan Angin (knots)")},
+    {"x": 772.1, "y": 513.7, "cell": (1, "Kecepatan Angin (knots)")},
+    {"x": 1162.8, "y": 513.7, "cell": (2, "Kecepatan Angin (knots)")},
+    {"x": 1553.5, "y": 513.7, "cell": (3, "Kecepatan Angin (knots)")},
+
+    {"x": 381.4, "y": 851.4, "cell": (4, "Kecepatan Angin (knots)")},
+    {"x": 772.1, "y": 851.4, "cell": (5, "Kecepatan Angin (knots)")},
+    {"x": 1162.8, "y": 851.4, "cell": (6, "Kecepatan Angin (knots)")},
+    {"x": 1553.5, "y": 851.4, "cell": (7, "Kecepatan Angin (knots)")},
+
+    # IKON CUACA
+    {"x": 345.1, "y": 429.6, "cell": (0, "File Ikon")},
+    {"x": 735.8, "y": 429.6, "cell": (1, "File Ikon")},
+    {"x": 1126.5, "y": 429.6, "cell": (2, "File Ikon")},
+    {"x": 1517.2, "y": 429.6, "cell": (3, "File Ikon")},
+
+    {"x": 345.1, "y": 767.2, "cell": (4, "File Ikon")},
+    {"x": 735.8, "y": 767.2, "cell": (5, "File Ikon")},
+    {"x": 1126.5, "y": 767.2, "cell": (6, "File Ikon")},
+    {"x": 1517.2, "y": 767.2, "cell": (7, "File Ikon")},
+]
+
 
 # =====================================================================
 # PLOT DATA
