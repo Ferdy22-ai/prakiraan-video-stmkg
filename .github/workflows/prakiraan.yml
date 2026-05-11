@@ -2,7 +2,7 @@ name: Prakiraan Cuaca Harian
 
 on:
   schedule:
-    - cron: '5 23 * * *'   # 06:00 WIB
+    - cron: '5 23 * * *'
   workflow_dispatch:
 
 jobs:
@@ -16,7 +16,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.11"
+          python-version: '3.11'
 
       - name: Install FFmpeg
         run: sudo apt-get update && sudo apt-get install -y ffmpeg
@@ -24,8 +24,14 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Jalankan script
+      - name: Download video template
+        run: |
+          gdown "https://drive.google.com/uc?id=${{ secrets.VIDEO_TEMPLATE_ID }}" \
+            -O prakiraan.mp4
+
+      - name: Run script
         env:
           EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
           EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
+          RECIPIENT_EMAIL: ${{ secrets.RECIPIENT_EMAIL }}
         run: python new_prakiraan.py
