@@ -28,6 +28,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: Download video template
+        run: |
+          gdown "https://drive.google.com/uc?id=${{ secrets.VIDEO_TEMPLATE_ID }}" \
+            -O prakiraan.mp4
+
       - name: Run script
         env:
           EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
