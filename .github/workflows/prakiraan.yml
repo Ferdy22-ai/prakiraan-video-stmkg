@@ -4,7 +4,7 @@ on:
   schedule:
     - cron: '5 23 * * *'
   workflow_dispatch:
-
+ 
 jobs:
   prakiraan:
     runs-on: ubuntu-latest
