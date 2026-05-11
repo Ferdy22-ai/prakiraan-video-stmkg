@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   schedule:
     - cron: '5 23 * * *'   # 06.00 WIB setiap hari
-
+ 
 jobs:
   run-prakiraan:
     runs-on: ubuntu-latest
