@@ -317,61 +317,160 @@ overlay_clip.close()
 print(f"✅ Video berhasil dibuat: {output_video_path}")
 
 # =====================================================================
-# KIRIM EMAIL
+# KIRIM EMAIL + UPLOAD VIDEO KE GOOGLE DRIVE (folder per tanggal)
 # =====================================================================
-print("📧 Mengirim email...")
+import os
+import mimetypes
+import smtplib
+import json
+from datetime import datetime
+from email.message import EmailMessage
+from google.oauth2 import service_account
+from googleapiclient.discovery import build
+from googleapiclient.http import MediaFileUpload
 
+print("☁️ Mengupload video ke Google Drive...")
+try:
+    # --- Setup credentials ---
+    service_account_info = json.loads(os.environ["GOOGLE_SERVICE_ACCOUNT_JSON"])
+    credentials = service_account.Credentials.from_service_account_info(
+        service_account_info,
+        scopes=["https://www.googleapis.com/auth/drive.file"]
+    )
+    drive_service = build("drive", "v3", credentials=credentials)
+
+    # --- ID folder utama "Prakiraan Cuaca STMKG" di Google Drive ---
+    # Buat folder ini manual di Drive, lalu share ke email service account,
+    # kemudian copy ID-nya dari URL: drive.google.com/drive/folders/<FOLDER_ID>
+    PARENT_FOLDER_ID = os.environ.get("GDRIVE_PARENT_FOLDER_ID", "")
+
+    # --- Buat folder tanggal hari ini (misal: "2026-05-11") ---
+    today_str = datetime.now().strftime("%Y-%m-%d")
+
+    # Cek apakah folder tanggal sudah ada
+    query = (
+        f"name='{today_str}' "
+        f"and mimeType='application/vnd.google-apps.folder' "
+        f"and '{PARENT_FOLDER_ID}' in parents "
+        f"and trashed=false"
+    )
+    existing = drive_service.files().list(
+        q=query, fields="files(id, name)"
+    ).execute().get("files", [])
+
+    if existing:
+        # Folder sudah ada, pakai yang lama
+        date_folder_id = existing[0]["id"]
+        print(f"📁 Folder '{today_str}' sudah ada, menggunakan folder yang ada.")
+    else:
+        # Buat folder tanggal baru
+        folder_metadata = {
+            "name": today_str,
+            "mimeType": "application/vnd.google-apps.folder",
+            "parents": [PARENT_FOLDER_ID] if PARENT_FOLDER_ID else []
+        }
+        date_folder = drive_service.files().create(
+            body=folder_metadata, fields="id"
+        ).execute()
+        date_folder_id = date_folder["id"]
+
+        # Jadikan folder publik
+        drive_service.permissions().create(
+            fileId=date_folder_id,
+            body={"type": "anyone", "role": "reader"}
+        ).execute()
+        print(f"📁 Folder '{today_str}' berhasil dibuat.")
+
+    # --- Upload video ke folder tanggal ---
+    mime_type, _ = mimetypes.guess_type(output_video_path)
+    mime_type = mime_type or "video/mp4"
+
+    file_metadata = {
+        "name": os.path.basename(output_video_path),
+        "parents": [date_folder_id]
+    }
+    media = MediaFileUpload(output_video_path, mimetype=mime_type, resumable=True)
+    uploaded_file = drive_service.files().create(
+        body=file_metadata,
+        media_body=media,
+        fields="id, webViewLink"
+    ).execute()
+
+    # Jadikan file publik
+    drive_service.permissions().create(
+        fileId=uploaded_file["id"],
+        body={"type": "anyone", "role": "reader"}
+    ).execute()
+
+    video_link = uploaded_file["webViewLink"]
+    print(f"✅ Video berhasil diupload ke folder '{today_str}': {video_link}")
+
+except Exception as e:
+    video_link = None
+    date_folder_id = None
+    print(f"⚠️ Gagal upload ke Google Drive: {e}")
+
+# --- Upload CSV ke folder yang sama ---
+print("☁️ Mengupload CSV ke Google Drive...")
+try:
+    csv_metadata = {
+        "name": os.path.basename(csv_path),
+        "parents": [date_folder_id]
+    }
+    csv_media = MediaFileUpload(csv_path, mimetype="text/csv", resumable=False)
+    uploaded_csv = drive_service.files().create(
+        body=csv_metadata,
+        media_body=csv_media,
+        fields="id, webViewLink"
+    ).execute()
+
+    drive_service.permissions().create(
+        fileId=uploaded_csv["id"],
+        body={"type": "anyone", "role": "reader"}
+    ).execute()
+
+    csv_link = uploaded_csv["webViewLink"]
+    print(f"✅ CSV berhasil diupload: {csv_link}")
+
+except Exception as e:
+    csv_link = None
+    print(f"⚠️ Gagal upload CSV ke Google Drive: {e}")
+
+# --- Kirim Email ---
+print("📧 Mengirim email...")
 try:
     email_address = os.environ["EMAIL_ADDRESS"]
     email_password = os.environ["EMAIL_PASSWORD"]
-
-    recipient_email = os.environ.get(
-        "RECIPIENT_EMAIL",
-        email_address,
-    )
+    recipient_email = os.environ.get("RECIPIENT_EMAIL", "ferdyindra38@gmail.com")
 
     msg = EmailMessage()
-    msg["Subject"] = "Prakiraan Cuaca Harian STMKG"
+    msg["Subject"] = f"Prakiraan Cuaca Harian STMKG - {today_str}"
     msg["From"] = email_address
     msg["To"] = recipient_email
 
-    msg.set_content(
-        "Berikut terlampir file prakiraan cuaca harian dalam format CSV dan video MP4."
-    )
+    lines = [
+        f"Prakiraan cuaca harian STMKG untuk tanggal {today_str} telah tersedia.\n",
+    ]
+    if video_link:
+        lines.append(f"🎬 Video Prakiraan Cuaca:\n{video_link}\n")
+    else:
+        lines.append("⚠️ Video gagal diupload ke Google Drive.\n")
 
-    # Lampirkan CSV
-    with open(csv_path, "rb") as f:
-        msg.add_attachment(
-            f.read(),
-            maintype="text",
-            subtype="csv",
-            filename=os.path.basename(csv_path),
-        )
+    if csv_link:
+        lines.append(f"📊 File CSV:\n{csv_link}\n")
+    else:
+        lines.append("⚠️ CSV gagal diupload ke Google Drive.\n")
 
-    # Lampirkan Video
-    with open(output_video_path, "rb") as f:
-        mime_type, _ = mimetypes.guess_type(output_video_path)
+    lines.append("Semua file tersimpan di Google Drive folder tanggal hari ini.")
 
-        if mime_type:
-            maintype, subtype = mime_type.split("/")
-        else:
-            maintype, subtype = "video", "mp4"
-
-        msg.add_attachment(
-            f.read(),
-            maintype=maintype,
-            subtype=subtype,
-            filename=os.path.basename(output_video_path),
-        )
+    msg.set_content("\n".join(lines))
 
     with smtplib.SMTP_SSL("smtp.gmail.com", 465) as smtp:
         smtp.login(email_address, email_password)
         smtp.send_message(msg)
-
     print(f"✅ Email berhasil dikirim ke {recipient_email}")
 
 except KeyError as e:
     print(f"❌ Environment variable belum diset: {e}")
-
 except Exception as e:
     print(f"❌ Gagal mengirim email: {e}")
