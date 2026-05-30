@@ -32,7 +32,13 @@ video_path = os.path.join(BASE_DIR, "prakiraan.mp4")
 csv_path = os.path.join(output_dir, "prakiraan_cuaca.csv")
 
 # File video output
-output_video_path = os.path.join(output_dir, "prakiraan_video_output.mp4")
+assets_dir = os.path.join(BASE_DIR, "assets")
+os.makedirs(assets_dir, exist_ok=True)
+
+output_video_path = os.path.join(
+    assets_dir,
+    "current_weather.mp4"
+)
 
 # Ikon arah angin
 ikon_arah_path = os.path.join(ikon_dir, "ikon_arah_angin.png")
